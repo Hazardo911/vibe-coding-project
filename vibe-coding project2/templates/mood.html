@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}Mood Tracker - Smart Wellness Tracker{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h1 class="text-center">
+                <i class="fas fa-smile me-2 text-warning"></i>Mood Tracker
+            </h1>
+            <p class="text-center text-muted">Track your daily mood and emotional wellness journey</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Mood Logging -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Log Your Mood</h5>
+                </div>
+                <div class="card-body">
+                    <form id="moodForm">
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <label class="form-label">How are you feeling today?</label>
+                                <div class="d-flex justify-content-around flex-wrap">
+                                    <div class="text-center mood-option" data-mood="😊">
+                                        <div class="mood-emoji mb-2">😊</div>
+                                        <small>Happy</small>
+                                    </div>
+                                    <div class="text-center mood-option" data-mood="😐">
+                                        <div class="mood-emoji mb-2">😐</div>
+                                        <small>Neutral</small>
+                                    </div>
+                                    <div class="text-center mood-option" data-mood="😔">
+                                        <div class="mood-emoji mb-2">😔</div>
+                                        <small>Sad</small>
+                                    </div>
+                                    <div class="text-center mood-option" data-mood="😤">
+                                        <div class="mood-emoji mb-2">😤</div>
+                                        <small>Stressed</small>
+                                    </div>
+                                    <div class="text-center mood-option" data-mood="😴">
+                                        <div class="mood-emoji mb-2">😴</div>
+                                        <small>Tired</small>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="selectedMood" name="mood" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="moodNotes" class="form-label">Notes (optional)</label>
+                                <textarea class="form-control" id="moodNotes" name="notes" rows="3" 
+                                          placeholder="How was your day? What made you feel this way?"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-save me-2"></i>Log Mood
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Mood History -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Mood History</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_data.mood_logs %}
+                        <div class="list-group">
+                            {% for mood_log in user_data.mood_logs[-10:] %}
+                            <div class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-bold">
+                                        <span class="mood-emoji me-2">{{ mood_log.mood }}</span>
+                                        {{ mood_log.date }}
+                                    </div>
+                                    {% if mood_log.notes %}
+                                        <p class="mb-1">{{ mood_log.notes }}</p>
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">{{ mood_log.date.split(' ')[1] if ' ' in mood_log.date else '' }}</small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-smile fa-3x mb-3"></i>
+                            <p>No mood entries yet. Start tracking your mood to see your emotional wellness journey!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mood Trends Chart -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Mood Trends</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="moodChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Mood Insights -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Mood Insights</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_data.mood_logs %}
+                        {% set recent_moods = user_data.mood_logs[-7:] %}
+                        {% set happy_count = recent_moods | selectattr('mood', 'equalto', '😊') | list | length %}
+                        {% set sad_count = recent_moods | selectattr('mood', 'equalto', '😔') | list | length %}
+                        {% set stressed_count = recent_moods | selectattr('mood', 'equalto', '😤') | list | length %}
+                        
+                        <div class="mb-3">
+                            <h6>This Week's Mood</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Happy Days</span>
+                                <span class="badge bg-success">{{ happy_count }}/7</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Challenging Days</span>
+                                <span class="badge bg-warning">{{ sad_count + stressed_count }}/7</span>
+                            </div>
+                        </div>
+                        
+                        {% if happy_count > 3 %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-star me-2"></i>
+                                Great week! You've been feeling positive most days.
+                            </div>
+                        {% elif sad_count + stressed_count > 3 %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-heart me-2"></i>
+                                Remember, it's okay to have tough days. Consider talking to someone or practicing self-care.
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted">Start logging your mood to see personalized insights!</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mood-Based Suggestions -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-magic me-2"></i>Mood-Based Tips</h5>
+                </div>
+                <div class="card-body">
+                    <div id="moodTips">
+                        <p class="text-muted">Select a mood to see personalized wellness suggestions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mood Booster Game -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-gamepad me-2"></i>Mood Booster Game</h5>
+                </div>
+                <div class="card-body text-center">
+                    <p class="mb-3">Feeling down? Try our fun bubble-popping game to lift your spirits!</p>
+                    <a href="{{ url_for('mood_game') }}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-play me-2"></i>Play Mood Booster Game
+                    </a>
+                    <small class="d-block mt-2 text-muted">60 seconds of fun guaranteed to make you smile! 😊</small>
+                </div>
+            </div>
+
+            <!-- Wellness Activities -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-heart me-2"></i>Wellness Activities</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="startBreathing()">
+                            <i class="fas fa-wind me-2"></i>Breathing Exercise
+                        </button>
+                        <button class="btn btn-outline-success" onclick="startGratitude()">
+                            <i class="fas fa-heart me-2"></i>Gratitude Practice
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="startJournaling()">
+                            <i class="fas fa-pen me-2"></i>Quick Journal
+                        </button>
+                        <button class="btn btn-outline-info" onclick="startStretching()">
+                            <i class="fas fa-child me-2"></i>Light Stretching
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const moodOptions = document.querySelectorAll('.mood-option');
+    const selectedMoodInput = document.getElementById('selectedMood');
+    const moodForm = document.getElementById('moodForm');
+    const moodTips = document.getElementById('moodTips');
+    
+    // Handle mood selection
+    moodOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove previous selection
+            moodOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selection to clicked option
+            this.classList.add('selected');
+            
+            // Update hidden input
+            const mood = this.dataset.mood;
+            selectedMoodInput.value = mood;
+            
+            // Show mood-based tips
+            showMoodTips(mood);
+        });
+    });
+    
+    // Handle form submission
+    moodForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!selectedMoodInput.value) {
+            showMessage('Please select a mood first!', 'warning');
+            return;
+        }
+        
+        const formData = new FormData(this);
+        
+        fetch('/log_mood', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                moodForm.reset();
+                moodOptions.forEach(opt => opt.classList.remove('selected'));
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showMessage(data.error || 'Error logging mood', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error logging mood', 'danger');
+        });
+    });
+    
+    // Load mood chart
+    loadMoodChart();
+});
+
+function showMoodTips(mood) {
+    const tips = {
+        '😊': `
+            <div class="alert alert-success">
+                <h6><i class="fas fa-sun me-2"></i>You're feeling great!</h6>
+                <ul class="mb-0">
+                    <li>Share your positive energy with others</li>
+                    <li>Take on a new challenge or hobby</li>
+                    <li>Practice gratitude for this moment</li>
+                    <li>Consider helping someone else</li>
+                </ul>
+            </div>
+        `,
+        '😐': `
+            <div class="alert alert-info">
+                <h6><i class="fas fa-balance-scale me-2"></i>Feeling neutral?</h6>
+                <ul class="mb-0">
+                    <li>Try a short walk to boost your mood</li>
+                    <li>Listen to your favorite music</li>
+                    <li>Connect with a friend or family member</li>
+                    <li>Do something creative or fun</li>
+                </ul>
+            </div>
+        `,
+        '😔': `
+            <div class="alert alert-warning">
+                <h6><i class="fas fa-cloud me-2"></i>Feeling down?</h6>
+                <ul class="mb-0">
+                    <li>Be kind to yourself - it's okay to feel this way</li>
+                    <li>Try gentle exercise or stretching</li>
+                    <li>Talk to someone you trust</li>
+                    <li>Practice self-care activities</li>
+                </ul>
+                <hr>
+                <div class="text-center">
+                    <a href="{{ url_for('mood_game') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-gamepad me-2"></i>Play Mood Booster Game
+                    </a>
+                </div>
+            </div>
+        `,
+        '😤': `
+            <div class="alert alert-danger">
+                <h6><i class="fas fa-fire me-2"></i>Feeling stressed?</h6>
+                <ul class="mb-0">
+                    <li>Take deep breaths - inhale for 4, hold for 4, exhale for 4</li>
+                    <li>Step away from stressful situations</li>
+                    <li>Try progressive muscle relaxation</li>
+                    <li>Consider talking to a professional</li>
+                </ul>
+                <hr>
+                <div class="text-center">
+                    <a href="{{ url_for('mood_game') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-gamepad me-2"></i>Play Mood Booster Game
+                    </a>
+                </div>
+            </div>
+        `,
+        '😴': `
+            <div class="alert alert-secondary">
+                <h6><i class="fas fa-bed me-2"></i>Feeling tired?</h6>
+                <ul class="mb-0">
+                    <li>Take a short power nap (15-20 minutes)</li>
+                    <li>Get some fresh air and sunlight</li>
+                    <li>Stay hydrated with water</li>
+                    <li>Consider your sleep schedule</li>
+                </ul>
+                <hr>
+                <div class="text-center">
+                    <a href="{{ url_for('mood_game') }}" class="btn btn-warning btn-sm">
+                        <i class="fas fa-gamepad me-2"></i>Play Mood Booster Game
+                    </a>
+                </div>
+            </div>
+        `
+    };
+    
+    moodTips.innerHTML = tips[mood] || '<p class="text-muted">Select a mood to see personalized wellness suggestions.</p>';
+}
+
+function loadMoodChart() {
+    fetch('/api/mood_data')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('moodChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Happy', 'Neutral', 'Sad', 'Stressed', 'Tired'],
+                    datasets: [{
+                        data: [data['😊'], data['😐'], data['😔'], data['😤'], data['😴']],
+                        backgroundColor: [
+                            '#28a745',
+                            '#17a2b8',
+                            '#ffc107',
+                            '#dc3545',
+                            '#6c757d'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Mood Distribution (Last 7 Days)'
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading mood chart:', error));
+}
+
+function startBreathing() {
+    showMessage('Starting 2-minute breathing exercise...', 'info');
+    // In a real app, this would start a breathing timer
+    setTimeout(() => {
+        showMessage('Breathing exercise completed! You should feel more relaxed.', 'success');
+    }, 2000);
+}
+
+function startGratitude() {
+    const gratitudes = [
+        'I am grateful for my health and wellbeing',
+        'I appreciate the people in my life',
+        'I am thankful for this moment of peace',
+        'I am grateful for my ability to grow and learn',
+        'I appreciate the beauty around me'
+    ];
+    
+    const randomGratitude = gratitudes[Math.floor(Math.random() * gratitudes.length)];
+    showMessage(`Gratitude practice: ${randomGratitude}`, 'info');
+}
+
+function startJournaling() {
+    showMessage('Opening your digital journal...', 'info');
+    // In a real app, this would open a journaling interface
+}
+
+function startStretching() {
+    const stretches = [
+        'Gentle neck stretches',
+        'Shoulder rolls',
+        'Cat-cow stretches',
+        'Child\'s pose',
+        'Standing side stretches'
+    ];
+    
+    const randomStretch = stretches[Math.floor(Math.random() * stretches.length)];
+    showMessage(`Try this stretch: ${randomStretch}`, 'info');
+}
+</script>
+{% endblock %}

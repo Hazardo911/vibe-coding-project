@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Habits - Smart Wellness Tracker{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h1 class="text-center">
+                <i class="fas fa-tasks me-2 text-primary"></i>Track Your Habits
+            </h1>
+            <p class="text-center text-muted">Log your daily wellness activities and build healthy routines</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Habit Logging Forms -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Log New Habit</h5>
+                </div>
+                <div class="card-body">
+                    <form id="habitForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="habitType" class="form-label">Habit Type</label>
+                                <select class="form-select" id="habitType" name="habit_type" required>
+                                    <option value="">Select a habit...</option>
+                                    <option value="exercise">Exercise</option>
+                                    <option value="meditation">Meditation</option>
+                                    <option value="water_intake">Water Intake</option>
+                                    <option value="sleep_hours">Sleep Hours</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="amount" class="form-label">Amount</label>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       step="0.1" min="0" required placeholder="Enter amount...">
+                                <div class="form-text" id="amountHelp"></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date" class="form-label">Date</label>
+                                <input type="date" class="form-control" id="date" name="date" 
+                                       value="{{ now.strftime('%Y-%m-%d') }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-save me-2"></i>Log Habit
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Habit History -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Habit History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for habit_type, entries in user_data.habits.items() %}
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-capitalize">{{ habit_type.replace('_', ' ') }}</h6>
+                            <div class="list-group">
+                                {% for entry in entries[-5:] %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ entry.amount }}{% if habit_type in ['exercise', 'meditation'] %} min{% elif habit_type == 'water_intake' %} glasses{% else %} hours{% endif %}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ entry.date }}</small>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">
+                                        {% if habit_type == 'exercise' %}
+                                            <i class="fas fa-dumbbell"></i>
+                                        {% elif habit_type == 'meditation' %}
+                                            <i class="fas fa-om"></i>
+                                        {% elif habit_type == 'water_intake' %}
+                                            <i class="fas fa-tint"></i>
+                                        {% else %}
+                                            <i class="fas fa-bed"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% else %}
+                                <div class="list-group-item text-muted text-center">
+                                    <i class="fas fa-info-circle me-2"></i>No entries yet
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Quick Logging -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Log</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary quick-log" data-habit="water_intake" data-amount="1">
+                            <i class="fas fa-tint me-2"></i>Drink 1 Glass of Water
+                        </button>
+                        <button class="btn btn-outline-success quick-log" data-habit="exercise" data-amount="15">
+                            <i class="fas fa-dumbbell me-2"></i>15 Min Exercise
+                        </button>
+                        <button class="btn btn-outline-info quick-log" data-habit="meditation" data-amount="10">
+                            <i class="fas fa-om me-2"></i>10 Min Meditation
+                        </button>
+                        <button class="btn btn-outline-secondary quick-log" data-habit="sleep_hours" data-amount="8">
+                            <i class="fas fa-bed me-2"></i>8 Hours Sleep
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Goals Progress -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Daily Goals</h5>
+                </div>
+                <div class="card-body">
+                    {% set today = now.strftime('%Y-%m-%d') %}
+                    {% set today_water = user_data.habits.water_intake | selectattr('date', 'equalto', today) | map(attribute='amount') | sum %}
+                    {% set today_exercise = user_data.habits.exercise | selectattr('date', 'equalto', today) | map(attribute='minutes') | sum %}
+                    {% set today_meditation = user_data.habits.meditation | selectattr('date', 'equalto', today) | map(attribute='minutes') | sum %}
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Water Intake</span>
+                            <span>{{ today_water }}/{{ user_data.goals.daily_water }} glasses</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: {{ (today_water / user_data.goals.daily_water * 100) | min(100) }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Exercise</span>
+                            <span>{{ today_exercise }}/{{ user_data.goals.daily_exercise }} min</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: {{ (today_exercise / user_data.goals.daily_exercise * 100) | min(100) }}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Meditation</span>
+                            <span>{{ today_meditation }}/{{ user_data.goals.daily_meditation }} min</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" style="width: {{ (today_meditation / user_data.goals.daily_meditation * 100) | min(100) }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Habit Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Start small - even 5 minutes counts!
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Consistency beats perfection
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Track your progress daily
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Celebrate small wins
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const habitForm = document.getElementById('habitForm');
+    const habitTypeSelect = document.getElementById('habitType');
+    const amountInput = document.getElementById('amount');
+    const amountHelp = document.getElementById('amountHelp');
+    
+    // Update amount help text based on habit type
+    habitTypeSelect.addEventListener('change', function() {
+        const habitType = this.value;
+        switch(habitType) {
+            case 'exercise':
+                amountHelp.textContent = 'Enter exercise duration in minutes';
+                amountInput.placeholder = 'e.g., 30';
+                break;
+            case 'meditation':
+                amountHelp.textContent = 'Enter meditation duration in minutes';
+                amountInput.placeholder = 'e.g., 15';
+                break;
+            case 'water_intake':
+                amountHelp.textContent = 'Enter number of glasses of water';
+                amountInput.placeholder = 'e.g., 2';
+                break;
+            case 'sleep_hours':
+                amountHelp.textContent = 'Enter sleep duration in hours';
+                amountInput.placeholder = 'e.g., 8';
+                break;
+            default:
+                amountHelp.textContent = '';
+                amountInput.placeholder = 'Enter amount...';
+        }
+    });
+    
+    // Handle form submission
+    habitForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('/log_habit', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                habitForm.reset();
+                // Reload page to show updated data
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showMessage(data.error || 'Error logging habit', 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error logging habit', 'danger');
+        });
+    });
+    
+    // Handle quick log buttons
+    document.querySelectorAll('.quick-log').forEach(button => {
+        button.addEventListener('click', function() {
+            const habitType = this.dataset.habit;
+            const amount = this.dataset.amount;
+            
+            const formData = new FormData();
+            formData.append('habit_type', habitType);
+            formData.append('amount', amount);
+            formData.append('date', new Date().toISOString().split('T')[0]);
+            
+            fetch('/log_habit', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showMessage(data.error || 'Error logging habit', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('Error logging habit', 'danger');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

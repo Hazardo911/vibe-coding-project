@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Smart Wellness Tracker{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row">
+        <!-- Welcome Section -->
+        <div class="col-12 mb-4">
+            <h1 class="text-center mb-3">
+                <i class="fas fa-sun text-warning me-2"></i>
+                Good {{ "morning" if "06:00" <= now.strftime('%H:%M') <= "11:59" else "afternoon" if "12:00" <= now.strftime('%H:%M') <= "17:59" else "evening" }}! 
+                Let's track your wellness journey
+            </h1>
+            <p class="text-center text-muted">Today is {{ now.strftime('%A, %B %d, %Y') }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Today's Progress -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Today's Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="stats-card">
+                                <div class="stats-number text-primary">{{ today_water }}</div>
+                                <div class="stats-label">Glasses of Water</div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar" style="width: {{ (today_water / user_data.goals.daily_water * 100) | min(100) }}%"></div>
+                                </div>
+                                <small class="text-muted">Goal: {{ user_data.goals.daily_water }} glasses</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stats-card">
+                                <div class="stats-number text-success">{{ today_exercise }}</div>
+                                <div class="stats-label">Exercise Minutes</div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar bg-success" style="width: {{ (today_exercise / user_data.goals.daily_exercise * 100) | min(100) }}%"></div>
+                                </div>
+                                <small class="text-muted">Goal: {{ user_data.goals.daily_exercise }} minutes</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stats-card">
+                                <div class="stats-number text-info">{{ today_meditation }}</div>
+                                <div class="stats-label">Meditation Minutes</div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar bg-info" style="width: {{ (today_meditation / user_data.goals.daily_meditation * 100) | min(100) }}%"></div>
+                                </div>
+                                <small class="text-muted">Goal: {{ user_data.goals.daily_meditation }} minutes</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stats-card">
+                                <div class="stats-number text-danger">{{ today_calories }}</div>
+                                <div class="stats-label">Calories</div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar bg-danger" style="width: {{ (today_calories / user_data.goals.daily_calories * 100) | min(100) }}%"></div>
+                                </div>
+                                <small class="text-muted">Goal: {{ user_data.goals.daily_calories }} cal</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="stats-card">
+                                <div class="stats-number text-warning">{{ recent_moods|length }}</div>
+                                <div class="stats-label">Mood Entries</div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar bg-warning" style="width: 100%"></div>
+                                </div>
+                                <small class="text-muted">This week</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Charts -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Weekly Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Weather Card -->
+            {% if weather_data %}
+            <div class="card weather-card mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-cloud-sun me-2"></i>Weather
+                    </h5>
+                    <div class="display-4 mb-2">{{ weather_data.main.temp }}°C</div>
+                    <p class="mb-2">{{ weather_data.weather[0].description.title() }}</p>
+                    <p class="mb-0">{{ weather_data.name }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Motivational Quote -->
+            {% if quote %}
+            <div class="card quote-card mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-quote-left me-2"></i>Daily Inspiration
+                    </h5>
+                    <p class="card-text fst-italic">"{{ quote.content }}"</p>
+                    <small>- {{ quote.author }}</small>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Personalized Suggestions -->
+            {% if suggestions %}
+            <div class="card suggestion-card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-lightbulb me-2"></i>Smart Suggestions
+                    </h5>
+                    <ul class="list-unstyled mb-0">
+                        {% for suggestion in suggestions %}
+                        <li class="mb-2">
+                            <i class="fas fa-arrow-right me-2"></i>{{ suggestion }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('habits') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-2"></i>Log Habit
+                        </a>
+                        <a href="{{ url_for('nutrition') }}" class="btn btn-outline-success">
+                            <i class="fas fa-apple-alt me-2"></i>Log Nutrition
+                        </a>
+                        <a href="{{ url_for('mood') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-smile me-2"></i>Log Mood
+                        </a>
+                        <a href="{{ url_for('tips') }}" class="btn btn-outline-info">
+                            <i class="fas fa-lightbulb me-2"></i>Get Tips
+                        </a>
+                        {% if recent_moods %}
+                            {% set negative_moods = ['😔', '😤', '😴'] %}
+                            {% set negative_count = recent_moods | selectattr('mood', 'in', negative_moods) | list | length %}
+                            {% if negative_count >= 2 %}
+                            <a href="{{ url_for('mood_game') }}" class="btn btn-warning">
+                                <i class="fas fa-gamepad me-2"></i>Play Mood Booster Game
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Recent Habits</h6>
+                            <div class="list-group list-group-flush">
+                                {% for habit_type, entries in user_data.habits.items() %}
+                                    {% if entries %}
+                                        {% set latest = entries[-1] %}
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                {{ habit_type.replace('_', ' ').title() }}
+                                            </div>
+                                            <span class="badge bg-primary rounded-pill">
+                                                {{ latest.amount }}{% if habit_type in ['exercise', 'meditation'] %} min{% else %} glasses{% endif %}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Recent Moods</h6>
+                            <div class="list-group list-group-flush">
+                                {% for mood_log in recent_moods[-3:] %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="mood-emoji me-2">{{ mood_log.mood }}</span>
+                                        {{ mood_log.notes[:30] }}{% if mood_log.notes|length > 30 %}...{% endif %}
+                                    </div>
+                                    <small class="text-muted">{{ mood_log.date.split(' ')[0] }}</small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch chart data
+    fetch('/api/chart_data')
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [{
+                        label: 'Water Intake (glasses)',
+                        data: data.water,
+                        borderColor: '#2196F3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Exercise (minutes)',
+                        data: data.exercise,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Meditation (minutes)',
+                        data: data.meditation,
+                        borderColor: '#FF9800',
+                        backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Weekly Wellness Progress'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => console.error('Error loading chart data:', error));
+});
+</script>
+{% endblock %}

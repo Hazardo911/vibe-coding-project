@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Tips - Smart Wellness Tracker{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row">
+        <div class="col-12 mb-4">
+            <h1 class="text-center">
+                <i class="fas fa-lightbulb me-2 text-warning"></i>Wellness Tips & Suggestions
+            </h1>
+            <p class="text-center text-muted">Personalized recommendations based on your habits and current conditions</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Personalized Suggestions -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-magic me-2"></i>Smart Suggestions</h5>
+                </div>
+                <div class="card-body">
+                    {% if nutrition_tips %}
+                        <div class="mb-4">
+                            <h6 class="text-primary"><i class="fas fa-apple-alt me-2"></i>Nutrition Tips</h6>
+                            <div class="list-group">
+                                {% for tip in nutrition_tips %}
+                                <div class="list-group-item">
+                                    <i class="fas fa-arrow-right text-success me-2"></i>{{ tip }}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if weather_data %}
+                        <div class="mb-4">
+                            <h6 class="text-info"><i class="fas fa-cloud-sun me-2"></i>Weather-Based Recommendations</h6>
+                            <div class="list-group">
+                                {% set weather_main = weather_data.weather[0].main.lower() %}
+                                {% set temp = weather_data.main.temp %}
+                                
+                                {% if 'rain' in weather_main or 'snow' in weather_main %}
+                                <div class="list-group-item">
+                                    <i class="fas fa-umbrella text-info me-2"></i>
+                                    It's raining - perfect for indoor yoga or meditation!
+                                </div>
+                                {% elif 'clear' in weather_main and temp > 20 %}
+                                <div class="list-group-item">
+                                    <i class="fas fa-sun text-warning me-2"></i>
+                                    Beautiful weather! Great day for outdoor exercise.
+                                </div>
+                                {% elif temp < 10 %}
+                                <div class="list-group-item">
+                                    <i class="fas fa-thermometer-empty text-primary me-2"></i>
+                                    It's chilly - consider indoor workouts or warm-up exercises.
+                                </div>
+                                {% endif %}
+                                
+                                <div class="list-group-item">
+                                    <i class="fas fa-tint text-primary me-2"></i>
+                                    Stay hydrated! Drink water regularly throughout the day.
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- General Wellness Tips -->
+                    <div>
+                        <h6 class="text-success"><i class="fas fa-heart me-2"></i>General Wellness Tips</h6>
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <i class="fas fa-clock text-warning me-2"></i>
+                                <strong>Morning Routine:</strong> Start your day with 5-10 minutes of stretching or meditation
+                            </div>
+                            <div class="list-group-item">
+                                <i class="fas fa-utensils text-success me-2"></i>
+                                <strong>Meal Timing:</strong> Try to eat at regular intervals and avoid eating 2-3 hours before bed
+                            </div>
+                            <div class="list-group-item">
+                                <i class="fas fa-mobile-alt text-info me-2"></i>
+                                <strong>Digital Wellness:</strong> Take regular breaks from screens and practice the 20-20-20 rule
+                            </div>
+                            <div class="list-group-item">
+                                <i class="fas fa-bed text-secondary me-2"></i>
+                                <strong>Sleep Hygiene:</strong> Maintain a consistent sleep schedule and create a relaxing bedtime routine
+                            </div>
+                            <div class="list-group-item">
+                                <i class="fas fa-users text-primary me-2"></i>
+                                <strong>Social Connection:</strong> Stay connected with friends and family for mental wellness
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Wellness Challenge -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>This Week's Challenge</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">Challenge: Hydration Boost</h6>
+                            <p>Try to drink one extra glass of water each day this week.</p>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-success" style="width: 60%"></div>
+                            </div>
+                            <small class="text-muted">Progress: 4/7 days completed</small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">Reward</h6>
+                            <p>Complete the challenge to unlock a new wellness tip!</p>
+                            <button class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-gift me-2"></i>View Reward
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wellness Resources -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-book me-2"></i>Wellness Resources</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-dumbbell text-primary mb-3" style="font-size: 2rem;"></i>
+                                    <h6>Exercise Guides</h6>
+                                    <p class="small">Simple workouts you can do at home</p>
+                                    <button class="btn btn-outline-primary btn-sm">Explore</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-om text-success mb-3" style="font-size: 2rem;"></i>
+                                    <h6>Meditation Tips</h6>
+                                    <p class="small">Mindfulness techniques for beginners</p>
+                                    <button class="btn btn-outline-success btn-sm">Explore</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-apple-alt text-warning mb-3" style="font-size: 2rem;"></i>
+                                    <h6>Nutrition Guide</h6>
+                                    <p class="small">Healthy eating tips and recipes</p>
+                                    <button class="btn btn-outline-warning btn-sm">Explore</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Weather Information -->
+            {% if weather_data %}
+            <div class="card weather-card mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-cloud-sun me-2"></i>Current Weather
+                    </h5>
+                    <div class="display-4 mb-2">{{ weather_data.main.temp }}°C</div>
+                    <p class="mb-2">{{ weather_data.weather[0].description.title() }}</p>
+                    <p class="mb-0">{{ weather_data.name }}</p>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <small>Humidity</small>
+                            <div class="fw-bold">{{ weather_data.main.humidity }}%</div>
+                        </div>
+                        <div class="col-6">
+                            <small>Feels Like</small>
+                            <div class="fw-bold">{{ weather_data.main.temp }}°C</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Daily Quote -->
+            {% if quote %}
+            <div class="card quote-card mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-quote-left me-2"></i>Daily Inspiration
+                    </h5>
+                    <p class="card-text fst-italic">"{{ quote.content }}"</p>
+                    <small>- {{ quote.author }}</small>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="setReminder()">
+                            <i class="fas fa-bell me-2"></i>Set Water Reminder
+                        </button>
+                        <button class="btn btn-outline-success" onclick="startMeditation()">
+                            <i class="fas fa-om me-2"></i>Start 5-Min Meditation
+                        </button>
+                        <button class="btn btn-outline-info" onclick="showExercise()">
+                            <i class="fas fa-dumbbell me-2"></i>Quick Exercise
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wellness Score -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-star me-2"></i>Your Wellness Score</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="display-4 text-success mb-2">85</div>
+                    <p class="mb-3">Great job! You're on track with your wellness goals.</p>
+                    
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-success" style="width: 85%"></div>
+                    </div>
+                    
+                    <small class="text-muted">Based on your habits, mood, and consistency</small>
+                    
+                    <hr class="my-3">
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <small>Habits</small>
+                            <div class="fw-bold text-success">90%</div>
+                        </div>
+                        <div class="col-6">
+                            <small>Mood</small>
+                            <div class="fw-bold text-info">80%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function setReminder() {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Water Reminder', {
+            body: 'Time to drink a glass of water!',
+            icon: '/static/favicon.ico'
+        });
+    } else if ('Notification' in window && Notification.permission !== 'denied') {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                setReminder();
+            }
+        });
+    }
+    showMessage('Water reminder set for every 2 hours!', 'success');
+}
+
+function startMeditation() {
+    showMessage('Starting 5-minute meditation timer...', 'info');
+    // In a real app, this would start a meditation timer
+    setTimeout(() => {
+        showMessage('Meditation session completed! Great job!', 'success');
+    }, 5000);
+}
+
+function showExercise() {
+    const exercises = [
+        '10 jumping jacks',
+        '5 push-ups',
+        '10 squats',
+        '30-second plank',
+        '5 burpees'
+    ];
+    
+    const randomExercise = exercises[Math.floor(Math.random() * exercises.length)];
+    showMessage(`Quick exercise: ${randomExercise}`, 'info');
+}
+
+// Request notification permission on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+});
+</script>
+{% endblock %}
